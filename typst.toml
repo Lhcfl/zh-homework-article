@@ -1,0 +1,16 @@
+[package]
+name = "zh-homework-article"
+version = "0.1.0"
+entrypoint = "lib.typ"
+authors = ["Linca <lhcfl@outlook.com>"]
+license = "LGPL-3.0"
+description = "中文期末作业用论文模板"
+categories = ["paper"]
+repository = "https://github.com/lhcfl/zh-homework-article"
+keywords = ["typst", "template", "paper", "homework", "cjk", "中文"]
+exclude = ["*.pdf"]
+
+[template]
+path = "template"
+entrypoint = "main.typ"
+thumbnail = "thumbnail.png"
