@@ -1,15 +1,7 @@
 #import "../lib.typ": homework-paper
 #import "@preview/zh-kit:0.1.0": *
 
-#let abstract = [
-这里是你的论文摘要。它可以是较长的文本块。
-摘要内容会自动处理缩进和排版。
-#zhlorem(20)
-
-#zhlorem(50)
-]
-
-#show: homework-paper.with(
+#let (display, field) = homework-paper(
   enable-outline: true,    // 是否生成目录 (默认 false)
   title: "你的论文标题",
   authors: (
@@ -19,9 +11,22 @@
       department: "计算机系"
     ),
   ),
-  abstract: abstract,
-  keywords: ("关键字1", "喵喵喵", "Typst模板") // 关键词元组
 )
+
+#show: display
+
+#field("摘要")[
+  这里是你的论文摘要。它可以是较长的文本块。
+  摘要内容会自动处理缩进和排版。
+  #zhlorem(20)
+
+
+  #zhlorem(50)
+]
+
+#field("关键词")[
+  关键词1; 关键词2; 关键词3
+]
 
 = 引言
 

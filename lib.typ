@@ -18,168 +18,207 @@
 // | 小六     | 6.5               | 2.29    | 8.7     |
 // | 七号     | 5.5               | 1.94    | 7.3     |
 // | 八号     | 5                 | 1.76    | 6.7     |
-
-
 #import "@preview/zh-kit:0.1.0": *
+
+#let 字体 = (
+  初号: 42pt,
+  小初: 36pt,
+  一号: 26pt,
+  小一: 24pt,
+  二号: 22pt,
+  小二: 18pt,
+  三号: 16pt,
+  小三: 15pt,
+  四号: 14pt,
+  小四: 12pt,
+  五号: 10.5pt,
+  小五: 9pt,
+  六号: 7.5pt,
+  小六: 6.5pt,
+  七号: 5.5pt,
+  八号: 5pt,
+)
 
 #let MAIN_BOLDABLE_ZH_FONT = "Source Han Serif SC"
 
 #let homework-paper(
-  body,
   title: "",
   authors: (),
-  abstract: (),
-  keywords: (),
+  keywords: none,
   font: (
-    font-size: 10.5pt // 五号字
+    font-size: 字体.五号, // 五号字
   ),
   paper: "a4",
-  enable-outline: false
+  enable-outline: false,
 ) = {
-  set page(paper: paper)
+  let hw-top-fields = state("hw-top-fields", ())
 
-  // override setup-base-font's bold override
-  show strong: x => {
-    set text(font: ("Times New Roman", MAIN_BOLDABLE_ZH_FONT))
-    x
+  let abstract-content = state("hw-abstract-ctnt", none)
+
+  let field(name, body) = {
+    hw-top-fields.update(old => (..old, (name, body)))
   }
-  show heading: x => {
-    set text(font: ("Times New Roman", MAIN_BOLDABLE_ZH_FONT))
-    x
-  }
-  setup-base-fonts(
-    {
-      set text(size: font.font-size)
-      set par(spacing: font.font-size * 1.5, leading: font.font-size * 1.5)
-      set list(spacing: 9pt)
-      set enum(spacing: 9pt)
+  let display(body) = {
+    set page(paper: paper)
 
-      set heading(numbering: (..nums) => {
-        let depth = nums.pos().len();
-        if depth == 1 {
-          return numbering("一、", nums.at(0))
-        } else if depth == 2 {
-          return numbering("（一）、", nums.at(1))
-        } else {
-          let (_1, _2, ..counts) = nums.pos();
-          return numbering("1.", ..counts)
-        }
-      })
+    // override setup-base-font's bold override
+    show strong: x => {
+      set text(font: ("Times New Roman", MAIN_BOLDABLE_ZH_FONT))
+      x
+    }
 
-      show heading: it => [
-        #if (it.depth > 2) {
-          pad(it, left: it.depth * 5pt)
-        } else {
-          it
-        }
-      ]
+    show heading: x => {
+      set text(font: ("Times New Roman", MAIN_BOLDABLE_ZH_FONT))
+      x
+    }
 
-      show heading: it => {
-        v(5pt)
+    show: setup-base-fonts.with(
+      cjk-serif-family: ("simsun", MAIN_BOLDABLE_ZH_FONT, "simsun", "Noto Serif", "Times New Roman"),
+      cjk-sans-family: ("simhei", "Noto Sans"),
+      latin-serif-family: ("Times New Roman", "Noto Serif"),
+      latin-sans-family: ("Georgia", "Noto Sans"),
+    )
+
+
+    set text(size: font.font-size)
+    set par(spacing: font.font-size * 1.5, leading: font.font-size * 1.5)
+    set list(spacing: 9pt)
+    set enum(spacing: 9pt)
+
+    set heading(numbering: (..nums) => {
+      let depth = nums.pos().len()
+      if depth == 1 {
+        return numbering("一、", nums.at(0))
+      } else if depth == 2 {
+        return numbering("（一）、", nums.at(1))
+      } else {
+        let (_1, _2, ..counts) = nums.pos()
+        return numbering("1.", ..counts)
+      }
+    })
+
+    show heading: it => [
+      #if (it.depth > 2) {
+        pad(it, left: it.depth * 5pt)
+      } else {
         it
-        v(2pt + (3 - it.level) * 1pt)
+      }
+    ]
+
+    show heading: it => {
+      v(5pt)
+      it
+      v(2pt + (3 - it.level) * 1pt)
+    }
+
+    show ref: it => {
+      set text(fill: color.rgb(128, 0, 0))
+      it
+    }
+
+    set par(first-line-indent: 0em, spacing: 1em)
+
+    // Helper function to display string or content
+    let display-field(field) = {
+      if type(field) == content { field } else if type(field) == str { text(field) } // Use 'str' for string type
+      else { () } // Handle other types or empty if necessary
+    }
+
+    {
+      set align(center)
+
+      if title != () {
+        v(4em)
+        set text(size: 字体.三号) // 五号
+        strong(display-field(title))
       }
 
-      show ref: it => {
+      if authors != () {
+        let author-content = ()
+
+        for author in authors {
+          author-content.push(
+            [
+              #set text(size: 12pt, weight: "bold")
+              #display-field(author.number + "  ")
+              #display-field(author.name)
+              // Display email based on type (handle string as link, content directly)
+              #if "email" in author {
+                if type(author.email) == content {
+                  author.email
+                } else if type(author.email) == str {
+                  // Use 'str' for string type
+                  link("mailto:" + author.email)[#author.email]
+                }
+              }
+              #if "department" in author {
+                display-field("  " + author.department)
+              }
+            ],
+          )
+        }
+
+        table(
+          columns: authors.len(),
+          align: center,
+          stroke: 0em,
+          inset: (
+            x: 20pt,
+          ),
+          ..author-content
+        )
+      }
+    }
+
+
+    (
+      context {
+        let fields = hw-top-fields.final()
+
+        let names = fields.map(it => it.at(0))
+        let max-name-len = calc.max(..names.map(it => it.clusters().len()), 0)
+
+        for (name, body) in fields {
+          let name-len = name.clusters().len()
+          v(0.75em)
+          set align(left)
+          set par(spacing: font.font-size * 1.5, leading: font.font-size * 1.5)
+          strong([#text(name, tracking: ((max-name-len - name-len) / (name-len - 1)) * 1em)：])
+          // Iterate and display keywords based on type, joining with "；"
+          body
+        }
+      }
+    )
+
+    (
+      context if abstract-content.final() != none {
+        v(0.75em)
+        set align(left)
+        set par(spacing: font.font-size * 1.5, leading: font.font-size * 1.5)
+        text(strong("摘　要:"))
+        // Iterate and display keywords based on type, joining with "；"
+        display-field(abstract-content.final())
+      }
+    )
+
+    if enable-outline {
+      show outline.entry: it => {
         set text(fill: color.rgb(128, 0, 0))
         it
       }
 
-      // make title
-      {
-        set par(first-line-indent: 0em, spacing: 1em)
-        set align(center)
-
-        // Helper function to display string or content
-        let display-field(field) = {
-          if type(field) == content { field }
-          else if type(field) == str { text(field) } // Use 'str' for string type
-          else { () } // Handle other types or empty if necessary
-        }
-
-        if title != () {
-          v(4em)
-          set text(size: 16pt, font: "GenRyuMin2 TC B") // 五号
-          strong(display-field(title))
-        }
-
-        if authors != () {
-          let author-content = ()
-
-          for author in authors {
-            author-content.push(
-              [
-                #set text(size: 12pt, weight: "bold")
-                #display-field(author.number + "  ")
-                #display-field(author.name)
-                // Display email based on type (handle string as link, content directly)
-                #if "email" in author {
-                  if type(author.email) == content {
-                    author.email
-                  } else if type(author.email) == str { // Use 'str' for string type
-                    link("mailto:" + author.email)[#author.email]
-                  }
-                }
-                #if "department" in author {
-                  display-field("  "+author.department)
-                }
-              ]
-            )
-          }
-
-          table(
-            columns: authors.len(),
-            align: center,
-            stroke: 0em,
-            inset: (
-              x: 20pt
-            ),
-            ..author-content
-          )
-        }
-
-        if abstract != () {
-          v(0.75em)
-          set align(left)
-          set par(spacing: font.font-size * 1.5, leading: font.font-size * 1.5)
-          text(strong("摘　要:"))
-          // Iterate and display keywords based on type, joining with "；"
-          display-field(abstract)
-        }
-
-        if keywords != () and keywords.len() > 0 {
-          v(0.75em)
-          set align(left)
-          text(strong("关键词："))
-          // Iterate and display keywords based on type, joining with "；"
-          for (i, keyword) in keywords.enumerate() {
-            display-field(keyword)
-            if i < keywords.len() - 1 {
-              "；"
-            }
-          }
-        }
-      }
-      
-      if enable-outline {
-        show outline.entry: it => {
-          set text(fill: color.rgb(128, 0, 0))
-          it
-        }
-
-        show outline.entry.where(level: 1): it => {
-          v(0.75em)
-          strong(it)
-        }
-
-        outline(title: [目录], indent: 1em)
+      show outline.entry.where(level: 1): it => {
+        v(0.75em)
+        strong(it)
       }
 
-      body
-    },
-    cjk-serif-family: ("simsun", MAIN_BOLDABLE_ZH_FONT, "simsun", "Noto Serif", "Times New Roman"),
-    cjk-sans-family: ("simhei", "Noto Sans"),
-    latin-serif-family: ("Times New Roman", "Noto Serif"),
-    latin-sans-family: ("Georgia", "Noto Sans"),
-  )
+
+      set align(center)
+      outline(title: [目#h(1em)录], indent: 1em)
+    }
+
+    body
+  }
+
+  return (display: display, field: field)
 }
