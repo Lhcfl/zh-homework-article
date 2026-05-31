@@ -41,23 +41,29 @@
 
 #let MAIN_BOLDABLE_ZH_FONT = "Source Han Serif SC"
 
+#let default-font-config = (
+  size: 字体.五号, // 五号字
+  bold-font: ("Times New Roman", "Source Han Serif SC"),
+  cjk-serif-family: ("Times New Roman", "Source Han Serif SC"),
+  latain-serif-family: ("Times New Roman", "Noto Serif"),
+)
+
 #let homework-paper(
   title: "",
   authors: (),
   keywords: none,
-  font: (
-    font-size: 字体.五号, // 五号字
-  ),
+  font: default-font-config,
   paper: "a4",
   enable-outline: false,
 ) = {
   let hw-top-fields = state("hw-top-fields", ())
 
-  let abstract-content = state("hw-abstract-ctnt", none)
+  let font = default-font-config + font
 
   let field(name, body) = {
     hw-top-fields.update(old => (..old, (name, body)))
   }
+
   let display(body) = {
     set page(paper: paper)
 
@@ -73,15 +79,12 @@
     }
 
     show: setup-base-fonts.with(
-      cjk-serif-family: ("simsun", MAIN_BOLDABLE_ZH_FONT, "simsun", "Noto Serif", "Times New Roman"),
-      cjk-sans-family: ("simhei", "Noto Sans"),
-      latin-serif-family: ("Times New Roman", "Noto Serif"),
-      latin-sans-family: ("Georgia", "Noto Sans"),
+      cjk-serif-family: font.cjk-serif-family,
+      latin-serif-family: font.latain-serif-family,
     )
 
-
-    set text(size: font.font-size)
-    set par(spacing: font.font-size * 1.5, leading: font.font-size * 1.5)
+    set text(size: font.size)
+    set par(spacing: font.size * 1.5, leading: font.size * 1.5)
     set list(spacing: 9pt)
     set enum(spacing: 9pt)
 
@@ -115,8 +118,6 @@
       set text(fill: color.rgb(128, 0, 0))
       it
     }
-
-    set par(first-line-indent: 0em, spacing: 1em)
 
     // Helper function to display string or content
     let display-field(field) = {
@@ -171,36 +172,25 @@
     }
 
 
-    (
-      context {
-        let fields = hw-top-fields.final()
+    context {
+      set par(first-line-indent: 0em, spacing: 1em)
 
-        let names = fields.map(it => it.at(0))
-        let max-name-len = calc.max(..names.map(it => it.clusters().len()), 0)
+      let fields = hw-top-fields.final()
 
-        for (name, body) in fields {
-          let name-len = name.clusters().len()
-          v(0.75em)
-          set align(left)
-          set par(spacing: font.font-size * 1.5, leading: font.font-size * 1.5)
-          strong([#text(name, tracking: ((max-name-len - name-len) / (name-len - 1)) * 1em)：])
-          // Iterate and display keywords based on type, joining with "；"
-          body
-        }
-      }
-    )
+      let names = fields.map(it => it.at(0))
+      let max-name-len = calc.max(..names.map(it => it.clusters().len()), 0)
 
-    (
-      context if abstract-content.final() != none {
+      for (name, body) in fields {
+        let name-len = name.clusters().len()
         v(0.75em)
         set align(left)
-        set par(spacing: font.font-size * 1.5, leading: font.font-size * 1.5)
-        text(strong("摘　要:"))
+        set par(spacing: font.size * 1.5, leading: font.size * 1.5)
+        strong([#text(name, tracking: ((max-name-len - name-len) / (name-len - 1)) * 1em)：])
         // Iterate and display keywords based on type, joining with "；"
-        display-field(abstract-content.final())
+        body
       }
-    )
-
+    }
+    
     if enable-outline {
       show outline.entry: it => {
         set text(fill: color.rgb(128, 0, 0))
