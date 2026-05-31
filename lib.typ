@@ -45,7 +45,7 @@
   size: 字体.五号, // 五号字
   bold-font: ("Times New Roman", "Source Han Serif SC"),
   cjk-serif-family: ("Times New Roman", "Source Han Serif SC"),
-  latain-serif-family: ("Times New Roman", "Noto Serif"),
+  latin-serif-family: ("Times New Roman", "Noto Serif"),
 )
 
 #let homework-paper(
@@ -80,7 +80,7 @@
 
     show: setup-base-fonts.with(
       cjk-serif-family: font.cjk-serif-family,
-      latin-serif-family: font.latain-serif-family,
+      latin-serif-family: font.latin-serif-family,
     )
 
     set text(size: font.size)
